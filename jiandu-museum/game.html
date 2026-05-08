@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>简牍博物馆 · 文明之路</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="game">
+  <div class="app-container">
+    
+    <!-- header 与其他页面一致 -->
+    <header class="header">
+      <div class="logo-section clickable" id="logoLink" style="cursor:pointer;">
+        <span class="logo-dream">JIANDU</span>
+        <span class="logo-street">MUSEUM</span>
+      </div>
+      <div class="header-actions">
+        <button class="header-icon-btn dots-btn" aria-label="更多菜单">
+          <span class="dot"></span>
+          <span class="dot middle"></span>
+          <span class="dot"></span>
+        </button>
+        <button class="header-icon-btn circle-btn" aria-label="搜索"></button>
+      </div>
+    </header>
+
+    <!-- page-title-bar：左侧返回箭头 + 右侧占位 -->
+<div class="page-title-bar">
+  <h2 id="pageTitle">
+    <span class="game-back-arrow" id="gameBackArrow">←</span>
+  </h2>
+  <button class="theme-toggle" id="themeToggle">
+    <span class="toggle-icon">☀️</span>
+    <span>白昼模式</span>
+  </button>
+</div>
+
+    <!-- 主内容区域 -->
+    <main class="main-content" id="appContent">
+      <!-- 动态渲染 -->
+    </main>
+
+  </div>
+
+  <script src="js/pages.js"></script>
+  <script>
+    const pageName = 'game';
+    let currentSubPage = 'splash';
+    let selectedMode = null;
+    const subPageStack = ['splash'];
+
+    function getPreviousPage() {
+      if (document.referrer && document.referrer.indexOf('game.html') === -1) {
+        return document.referrer;
+      }
+      return 'collection.html';
+    }
+
+    function renderPage(subPage) {
+      const template = pageTemplates[pageName][subPage];
+      if (!template) return;
+      
+      document.getElementById('appContent').innerHTML = template.html;
+      
+      if (subPage === 'splash') {
+        startProgressBar();
+      }
+      
+      if (subPage === 'modeSelect') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      
+      if (subPage === 'start' && selectedMode) {
+        fillStartPage();
+      }
+      
+      bindEvents();
+    }
+
+    function startProgressBar() {
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      if (!progressBar || !progressText) return;
+      
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 5;
+        if (progress > 100) progress = 100;
+        progressBar.style.width = progress + '%';
+        progressText.textContent = '加载中 ' + progress + '%';
+        
+        if (progress >= 100) {
+          clearInterval(interval);
+          progressText.textContent = '加载完成 ✓';
+          setTimeout(() => {
+            navigateTo('modeSelect');
+          }, 300);
+        }
+      }, 50);
+    }
+
+    function fillStartPage() {
+      const modeEmoji = document.getElementById('modeEmoji');
+      const modeTitle = document.getElementById('modeTitle');
+      const modeDesc = document.getElementById('modeDesc');
+      
+      const modeMap = {
+        kids: { emoji: '🧒', title: '儿童模式', desc: '趣味互动路线 · 寓教于乐 · 适合亲子参观' },
+        casual: { emoji: '☕', title: '休闲模式', desc: '轻松漫游路线 · 精选展品 · 自由节奏' },
+        deep: { emoji: '🔬', title: '深度模式', desc: '学术路线 · 详细解说 · 简牍爱好者之选' }
+      };
+      
+      const info = modeMap[selectedMode] || { emoji: '🚀', title: '准备出发', desc: '' };
+      
+      if (modeEmoji) modeEmoji.textContent = info.emoji;
+      if (modeTitle) modeTitle.textContent = info.title;
+      if (modeDesc) modeDesc.textContent = info.desc;
+    }
+
+    function navigateTo(subPage) {
+      subPageStack.push(subPage);
+      currentSubPage = subPage;
+      renderPage(subPage);
+    }
+
+    function goBack() {
+      if (subPageStack.length > 1) {
+        subPageStack.pop();
+        currentSubPage = subPageStack[subPageStack.length - 1];
+        renderPage(currentSubPage);
+      } else {
+        window.location.href = getPreviousPage();
+      }
+    }
+
+    function bindEvents() {
+      document.querySelectorAll('.clickable[data-subpage]').forEach(el => {
+        el.addEventListener('click', function() {
+          const subPage = this.getAttribute('data-subpage');
+          const mode = this.getAttribute('data-mode');
+          
+          if (mode) {
+            selectedMode = mode;
+          }
+          
+          navigateTo(subPage);
+        });
+      });
+      
+      document.querySelectorAll('.back-button').forEach(btn => {
+        btn.addEventListener('click', goBack);
+      });
+      
+const startBtn = document.getElementById('startExploreBtn');
+if (startBtn) {
+  startBtn.addEventListener('click', function() {
+    if (selectedMode === 'kids') {
+      window.location.href = 'kids-mode.html';
+    } else if (selectedMode === 'casual') {
+      window.location.href = 'casual-mode.html';
+    } else if (selectedMode === 'deep') {
+      window.location.href = 'deep-mode.html';
+    } else {
+      window.location.href = 'collection.html';
+    }
+  });
+}
+      
+      const backBtn = document.getElementById('backToMode');
+      if (backBtn) {
+        backBtn.addEventListener('click', function() {
+          subPageStack.pop();
+          subPageStack.pop();
+          currentSubPage = 'modeSelect';
+          subPageStack.push('modeSelect');
+          renderPage('modeSelect');
+        });
+      }
+    }
+
+    // 点击 Logo 返回馆藏页
+    document.getElementById('logoLink').addEventListener('click', function() {
+      window.location.href = 'collection.html';
+    });
+
+    // 左上角返回箭头
+    document.getElementById('gameBackArrow').addEventListener('click', function(e) {
+      e.stopPropagation();
+      goBack();
+    });
+
+    // 右上角操作按钮
+    document.querySelector('.circle-btn').addEventListener('click', function() {
+      window.location.href = 'collection.html';
+    });
+    
+    document.querySelector('.dots-btn').addEventListener('click', function() {
+      window.location.href = 'collection.html';
+    });
+// 日夜模式
+const themeToggle = document.getElementById('themeToggle');
+function updateThemeButton() {
+  const icon = themeToggle.querySelector('.toggle-icon');
+  const text = themeToggle.querySelector('span:last-child');
+  if (document.body.classList.contains('dark-mode')) {
+    icon.textContent = '🌙'; text.textContent = '暗夜模式';
+  } else {
+    icon.textContent = '☀️'; text.textContent = '白昼模式';
+  }
+}
+themeToggle.addEventListener('click', function() {
+  document.body.classList.toggle('dark-mode');
+  updateThemeButton();
+  localStorage.setItem('themeMode', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+});
+if (localStorage.getItem('themeMode') === 'dark') {
+  document.body.classList.add('dark-mode');
+}
+updateThemeButton();
+    renderPage('splash');
+  </script>
+</body>
+</html>
